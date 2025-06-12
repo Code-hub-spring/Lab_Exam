@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ElectroShop</title>
+</head>
+<body>
+  <h1>Electronic Shop - Product List</h1>
+  <button onclick="loadProducts()">Load Products</button>
+  <ul id="product-list"></ul>
+
+  <h1>Customer List</h1>
+  <button onclick="loadCustomers()">Load Customers</button>
+  <ul id="customer-list"></ul>
+
+  <h1>Order List</h1>
+  <button onclick="loadOrders()">Load Orders</button>
+  <ul id="order-list"></ul>
+
+  <script>
+    function loadProducts() {
+      fetch('http://localhost:5002/products')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('product-list');
+          list.innerHTML = '';
+          data.forEach(product => {
+            const li = document.createElement('li');
+            li.textContent = `${product.name} - $${product.price}`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    function loadCustomers() {
+      fetch('http://localhost:5000/customers')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('customer-list');
+          list.innerHTML = '';
+          data.forEach(customer => {
+            const li = document.createElement('li');
+            li.textContent = `${customer.name} (${customer.email})`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    function loadOrders() {
+      fetch('http://localhost:5001/orders')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('order-list');
+          list.innerHTML = '';
+          data.forEach(order => {
+            const li = document.createElement('li');
+            li.textContent = `Order #${order.id} - Customer ID: ${order.customer_id}, Product ID: ${order.product_id}, Quantity: ${order.quantity}`;
+            list.appendChild(li);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
