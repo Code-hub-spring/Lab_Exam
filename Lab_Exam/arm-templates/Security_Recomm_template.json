@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "westus2"
+    },
+    "productAppName": {
+      "type": "string",
+      "defaultValue": "product-api-v1"
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "RetailAppServicePlan"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "retail-kv"
+    },
+    "dbSecretName": {
+      "type": "string",
+      "defaultValue": "RetailDB-Password"
+    },
+    "frontendIp": {
+      "type": "string",
+      "defaultValue": "20.171.65.218"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "size": "B1",
+        "family": "B",
+        "capacity": 1
+      },
+      "properties": {
+        "reserved": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('productAppName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "httpsOnly": true
+      },
+      "resources": [
+        {
+          "type": "config",
+          "apiVersion": "2022-03-01",
+          "name": "web",
+          "properties": {
+            "ftpsState": "Disabled"
+          }
+        },
+        {
+          "type": "config/appsettings",
+          "apiVersion": "2022-03-01",
+          "name": "appsettings",
+          "properties": {
+            "DB_HOST": "retailedb-server-new.mysql.database.azure.com",
+            "DB_USER": "retaildbuser",
+            "DB_NAME": "RetailDB",
+            "DB_PASS": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('keyVaultName'), '.vault.azure.net/secrets/', parameters('dbSecretName'), '/)')]"
+          }
+        },
+        {
+          "type": "accessRestrictions",
+          "apiVersion": "2022-03-01",
+          "name": "AllowFrontendOnly",
+          "properties": {
+            "ipAddress": "[parameters('frontendIp')]",
+            "action": "Allow",
+            "priority": 100,
+            "name": "AllowFrontendOnly",
+            "description": "Allow access from frontend only"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/accessPolicies",
+      "apiVersion": "2021-06-01-preview",
+      "name": "[concat(parameters('keyVaultName'), '/add')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('productAppName'))]"
+      ],
+      "properties": {
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', parameters('productAppName')), '2022-03-01', 'full').identity.principalId]",
+            "permissions": {
+              "secrets": ["get"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
