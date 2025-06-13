@@ -1,0 +1,124 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "retailAppServicePlan"
+    },
+    "productApiName": {
+      "type": "string",
+      "defaultValue": "product-api-v1"
+    },
+    "customerApiName": {
+      "type": "string",
+      "defaultValue": "customer-api-v1"
+    },
+    "ordersApiName": {
+      "type": "string",
+      "defaultValue": "orders-api-v1"
+    },
+    "frontendAppName": {
+      "type": "string",
+      "defaultValue": "retail-frontend-v1"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "capacity": 1
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('productApiName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      },
+      "siteConfig": {
+        "appSettings": [
+          {
+            "name": "WEBSITE_RUN_FROM_PACKAGE",
+            "value": "https://github.com/Code-hub-spring/Lab_Exam/raw/main/Lab_Exam/apis.zip"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('customerApiName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      },
+      "siteConfig": {
+        "appSettings": [
+          {
+            "name": "WEBSITE_RUN_FROM_PACKAGE",
+            "value": "https://github.com/Code-hub-spring/Lab_Exam/raw/main/Lab_Exam/customer-api.zip"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('ordersApiName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      },
+      "siteConfig": {
+        "appSettings": [
+          {
+            "name": "WEBSITE_RUN_FROM_PACKAGE",
+            "value": "https://github.com/Code-hub-spring/Lab_Exam/raw/main/Lab_Exam/orders-api.zip"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('frontendAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+      },
+      "siteConfig": {
+        "appSettings": [
+          {
+            "name": "WEBSITE_RUN_FROM_PACKAGE",
+            "value": "https://github.com/Code-hub-spring/Lab_Exam/raw/main/Lab_Exam/frontend.zip"
+          }
+        ]
+      }
+    }
+  ]
+}
